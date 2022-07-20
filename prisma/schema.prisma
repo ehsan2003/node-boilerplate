@@ -111,6 +111,7 @@ model Login {
   id        String    @id @default(uuid()) @map("_id")
   userId    String
   user      User      @relation(fields: [userId], references: [id])
+  expiresAt DateTime
   date      DateTime
   revokedAt DateTime?
 }

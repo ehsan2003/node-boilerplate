@@ -2,8 +2,9 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./errorHandler";
 import authRouter from "./auth/controller";
-
+import morgan from "morgan";
 const app = express();
+app.use(morgan("dev"));
 app.use(cookieParser(process.env.SECRET_KEY));
 app.use(express.json());
 app.use("/api/auth", authRouter);

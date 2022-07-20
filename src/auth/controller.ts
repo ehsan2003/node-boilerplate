@@ -47,6 +47,7 @@ async function recordLogin(user: User): Promise<{ id: string }> {
       date: new Date(),
       userId: user.id,
       revokedAt: null,
+      expiresAt: new Date(Date.now() + config.jwtExpiration),
     },
   });
 }
@@ -80,9 +81,30 @@ router.get(
   authorize,
   wrap(async (req, res) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, phoneNumber, ...data } = req.user;
+    const { password, phoneNumber, loginId, ...data } = req.user;
     res.json(data);
   })
 );
 
+router.post(
+  "/logout",
+  authorize,
+  wrap(async (req, res) => {
+    const loginId = req.user.loginId;
+    await logout(loginId);
+    res.clearCookie("token");
+    return res.sendStatus(204);
+  })
+);
+
 export default router;
+async function logout(loginId: string) {
+  await prismaClient.login.update({
+    where: {
+      id: loginId,
+    },
+    data: {
+      revokedAt: new Date(),
+    },
+  });
+}

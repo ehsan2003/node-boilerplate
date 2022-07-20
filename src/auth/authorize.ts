@@ -9,9 +9,9 @@ import { config } from "../config";
 export const authorize: RequestHandler = wrap(async (req, res, next) => {
   const token = extractToken(req);
   const authPayload = verifyToken(token);
-  await verifyLogin(authPayload.loginId);
+  const { loginId } = await verifyLogin(authPayload.loginId);
   const user = await getUser(authPayload);
-  req.user = user;
+  req.user = { ...user, loginId };
   next();
 });
 
@@ -36,7 +36,7 @@ function extractToken(req: Request) {
   return token;
 }
 
-async function verifyLogin(loginId: string) {
+async function verifyLogin(loginId: string): Promise<{ loginId: string }> {
   const login = await prismaClient.login.findUnique({
     where: {
       id: loginId,
@@ -48,6 +48,7 @@ async function verifyLogin(loginId: string) {
   if (login.revokedAt) {
     throw new UnAuthorizedError("invalid auth");
   }
+  return { loginId: login.id };
 }
 function verifyToken(token: string): AuthPayload {
   try {
