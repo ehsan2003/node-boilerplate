@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(uuid()) @map("_id")
+  name        String
+  lastName    String
+  phoneNumber String    @unique
+  password    String
+  role        Role
+  deletedAt   DateTime?
+  Student     Student?
+  Teacher     Teacher?
+  logins      Login[]
+}
+
+enum Role {
+  Teacher
+  Student
+}
+
+model Student {
+  userId     String       @id @default(cuid()) @map("_id")
+  grade      Int
+  context    Context
+  password   String
+  exams      Exam[]       @relation(fields: [examIds], references: [id])
+  examIds    String[]
+  user       User         @relation(fields: [userId], references: [id])
+  ExamResult ExamResult[]
+}
+
+enum Context {
+  Mathematics
+  Science
+  Humanism
+}
+
+model Teacher {
+  userId      String    @id @default(cuid()) @map("_id")
+  user        User      @relation(fields: [userId], references: [id])
+  isAdmin     Boolean
+  subjects    Subject[] @relation(fields: [subjectsIds], references: [id])
+  subjectsIds String[]
+}
+
+model Subject {
+  id          String    @id @default(uuid()) @map("_id")
+  name        String
+  multiplier  Float
+  teachers    Teacher[] @relation(fields: [teachersIds], references: [userId])
+  teachersIds String[]
+  Pdf         Pdf[]
+}
+
+model Pdf {
+  id                String       @id @default(uuid()) @map("_id")
+  name              String
+  subject           Subject      @relation(fields: [subjectId], references: [id])
+  subjectId         String
+  grade             Int
+  defaultMultiplier Float
+  ordering          Float
+  answerLink        String?
+  mainPdf           String?
+  exams             Exam[]       @relation(fields: [examsIds], references: [id])
+  examsIds          String[]
+  time              Int
+  ExamResult        ExamResult[]
+}
+
+model Exam {
+  id             String          @id @default(uuid()) @map("_id")
+  date           DateTime
+  students       Student[]       @relation(fields: [studentsIds], references: [userId])
+  studentsIds    String[]
+  pdfs           Pdf[]           @relation(fields: [pdfIds], references: [id])
+  pdfIds         String[]
+  pdfMultipliers PdfMultiplier[]
+  results        ExamResult[]
+}
+
+type PdfMultiplier {
+  pdfId      String
+  multiplier Float
+}
+
+model ExamResult {
+  id        String  @id @default(uuid()) @map("_id")
+  exam      Exam    @relation(fields: [examId], references: [id])
+  examId    String
+  student   Student @relation(fields: [studentId], references: [userId])
+  studentId String
+  score     Float
+  pdf       Pdf     @relation(fields: [pdfId], references: [id])
+  pdfId     String
+
+  @@unique([examId, studentId, pdfId])
+}
+
+model Login {
+  id        String    @id @default(uuid()) @map("_id")
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  date      DateTime
+  revokedAt DateTime?
+}

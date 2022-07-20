@@ -1,0 +1,43 @@
+version: "3.6"
+services:
+  app:
+    build:
+      context: .
+      target: development
+    depends_on:
+      - db
+
+    volumes:
+      - ./src:/app/src
+    ports:
+      - 8800:8800
+    environment:
+      - DATABASE_URL=mongo://db:27017/app
+      - NODE_ENV=development
+      - PORT=8800
+      - SECRET_KEY=secret
+      - JWT_EXPIRATION=604800000
+  db:
+    image: mongo:5.0
+    volumes:
+      - ./data:/data/db
+    ports:
+      - "27017:27017"
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - "MINIO_ROOT_USER=minio-username"
+      - "MINIO_ROOT_PASSWORD=minio-password"
+    command: server /export --console-address ":9001"
+  createbuckets:
+    image: minio/mc
+    links:
+      - "minio"
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c " sleep 5;/bin/mc config host add local http://minio:9000 minio-username minio-password;/bin/mc mb --ignore-existing local/pdfs;/bin/mc policy set download local/pdfs;/bin/mc mb --ignore-existing local/answers;/bin/mc policy set download local/answers;exit 0;"

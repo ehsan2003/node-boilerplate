@@ -2,6 +2,9 @@ FROM node:16 as base
 WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install
+COPY ./prisma ./prisma
+RUN npx prisma db push
+RUN npx prisma generate
 COPY ./ ./
 
 FROM base as development

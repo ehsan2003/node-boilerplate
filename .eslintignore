@@ -2,3 +2,4 @@ jest.config.js
 dist
 node_modules
 commitlint.config.cjs
+data
