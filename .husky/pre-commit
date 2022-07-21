@@ -4,4 +4,4 @@
 yarn test
 yarn format
 yarn lint
-cspell src/*
+npx cspell src/*
