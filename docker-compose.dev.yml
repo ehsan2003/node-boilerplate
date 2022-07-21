@@ -2,13 +2,13 @@ version: "3.6"
 services:
   app:
     build:
-      context: .
+      context: backend
       target: development
     depends_on:
       - db
 
     volumes:
-      - ./src:/app/src
+      - ./backend/src:/app/src
     ports:
       - 8800:8800
     environment:
