@@ -1,0 +1,11 @@
+pre-commit:
+  parallel: true
+  commands:
+    test-backend:
+      run: cd backend && yarn test
+    lint-backend:
+      run: cd backend && yarn lint
+    format-backend:
+      run: cd backend && yarn format
+    
+    
