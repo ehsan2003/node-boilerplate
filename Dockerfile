@@ -3,7 +3,6 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install
 COPY ./prisma ./prisma
-RUN npx prisma db push
 RUN npx prisma generate
 COPY ./ ./
 

@@ -12,7 +12,7 @@ services:
     ports:
       - 8800:8800
     environment:
-      - DATABASE_URL=mongo://db:27017/app
+      - DATABASE_URL=mongodb://db:27017/payesh-dev
       - NODE_ENV=development
       - PORT=8800
       - SECRET_KEY=secret
