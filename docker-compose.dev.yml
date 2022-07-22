@@ -1,43 +1,52 @@
 version: "3.6"
 services:
-  app:
-    build:
-      context: backend
-      target: development
-    depends_on:
-      - db
+    app:
+        build:
+            context: backend
+            target: development
+        depends_on:
+            - db
 
-    volumes:
-      - ./backend/src:/app/src
-    ports:
-      - 8800:8800
-    environment:
-      - DATABASE_URL=mongodb://db:27017/payesh-dev
-      - NODE_ENV=development
-      - PORT=8800
-      - SECRET_KEY=secret
-      - JWT_EXPIRATION=604800000
-  db:
-    image: mongo:5.0
-    volumes:
-      - ./data:/data/db
-    ports:
-      - "27017:27017"
+        volumes:
+            - ./backend/src:/app/src
+        ports:
+            - 8800:8800
+        command: yarn start:dev
+        environment:
+            - DATABASE_URL=mongodb://db:27017/payesh-dev?directConnection=true&serverSelectionTimeoutMS=2000
+            - NODE_ENV=development
+            - PORT=8800
+            - SECRET_KEY=secret
+            - JWT_EXPIRATION=604800000
+    db:
+        image: mongo:5.0
+        ports:
+            - "27017:27017"
+        entrypoint: ["/usr/bin/mongod", "--replSet", "rs0", "--bind_ip_all"]
+        healthcheck:
+            test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongo "mongodb://db:27017/payesh-dev?directConnection=true&serverSelectionTimeoutMS=2000") -eq 1
+            interval: 5s
+            start_period: 30s
+    mongoinit:
+        image: mongo:5.0
+        entrypoint: sleep 5 && mongo "mongodb://db:27017/?directConnection=true&serverSelectionTimeoutMS=2000" --eval "rs.initiate()"
+        depends_on:
+            - db
 
-  minio:
-    image: minio/minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      - "MINIO_ROOT_USER=minio-username"
-      - "MINIO_ROOT_PASSWORD=minio-password"
-    command: server /export --console-address ":9001"
-  createbuckets:
-    image: minio/mc
-    links:
-      - "minio"
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c " sleep 5;/bin/mc config host add local http://minio:9000 minio-username minio-password;/bin/mc mb --ignore-existing local/pdfs;/bin/mc policy set download local/pdfs;/bin/mc mb --ignore-existing local/answers;/bin/mc policy set download local/answers;exit 0;"
+    minio:
+        image: minio/minio
+        ports:
+            - "9000:9000"
+            - "9001:9001"
+        environment:
+            - "MINIO_ROOT_USER=minio-username"
+            - "MINIO_ROOT_PASSWORD=minio-password"
+        command: server /export --console-address ":9001"
+    createbuckets:
+        image: minio/mc
+        links:
+            - "minio"
+        depends_on:
+            - minio
+        entrypoint: >
+            /bin/sh -c " sleep 5;/bin/mc config host add local http://minio:9000 minio-username minio-password;/bin/mc mb --ignore-existing local/pdfs;/bin/mc policy set download local/pdfs;/bin/mc mb --ignore-existing local/answers;/bin/mc policy set download local/answers;exit 0;"
