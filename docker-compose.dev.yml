@@ -13,25 +13,20 @@ services:
             - 8800:8800
         command: yarn start:dev
         environment:
-            - DATABASE_URL=mongodb://db:27017/payesh-dev?directConnection=true&serverSelectionTimeoutMS=2000
+            - DATABASE_URL=postgres://postgres:postgres@db:5432/payesh-dev
             - NODE_ENV=development
             - PORT=8800
             - SECRET_KEY=secret
             - JWT_EXPIRATION=604800000
     db:
-        image: mongo:5.0
+        image: postgres:14
         ports:
-            - "27017:27017"
-        entrypoint: ["/usr/bin/mongod", "--replSet", "rs0", "--bind_ip_all"]
-        healthcheck:
-            test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongo "mongodb://db:27017/payesh-dev?directConnection=true&serverSelectionTimeoutMS=2000") -eq 1
-            interval: 5s
-            start_period: 30s
-    mongoinit:
-        image: mongo:5.0
-        entrypoint: sleep 5 && mongo "mongodb://db:27017/?directConnection=true&serverSelectionTimeoutMS=2000" --eval "rs.initiate()"
-        depends_on:
-            - db
+            - 5432:5432
+        restart: always
+        environment:
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_USER: postgres
+            POSTGRES_DB: payesh-dev
 
     minio:
         image: minio/minio

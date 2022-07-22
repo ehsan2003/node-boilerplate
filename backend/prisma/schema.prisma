@@ -6,12 +6,12 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id          String    @id @default(uuid()) @map("_id")
+  id          String    @id @default(uuid())
   name        String
   lastName    String
   phoneNumber String    @unique
@@ -29,12 +29,11 @@ enum Role {
 }
 
 model Student {
-  userId     String       @id @default(cuid()) @map("_id")
+  userId     String       @id @default(cuid())
   grade      Int
   context    Context
   password   String
-  exams      Exam[]       @relation(fields: [examIds], references: [id])
-  examIds    String[]
+  exams      Exam[]
   user       User         @relation(fields: [userId], references: [id])
   ExamResult ExamResult[]
 }
@@ -46,24 +45,22 @@ enum Context {
 }
 
 model Teacher {
-  userId      String    @id @default(cuid()) @map("_id")
-  user        User      @relation(fields: [userId], references: [id])
-  isAdmin     Boolean
-  subjects    Subject[] @relation(fields: [subjectsIds], references: [id])
-  subjectsIds String[]
+  userId   String    @id @default(cuid())
+  user     User      @relation(fields: [userId], references: [id])
+  isAdmin  Boolean
+  subjects Subject[]
 }
 
 model Subject {
-  id          String    @id @default(uuid()) @map("_id")
-  name        String
-  multiplier  Float
-  teachers    Teacher[] @relation(fields: [teachersIds], references: [userId])
-  teachersIds String[]
-  Pdf         Pdf[]
+  id         String    @id @default(uuid())
+  name       String
+  multiplier Float
+  teachers   Teacher[]
+  Pdf        Pdf[]
 }
 
 model Pdf {
-  id                String       @id @default(uuid()) @map("_id")
+  id                String       @id @default(uuid())
   name              String
   subject           Subject      @relation(fields: [subjectId], references: [id])
   subjectId         String
@@ -72,30 +69,33 @@ model Pdf {
   ordering          Float
   answerLink        String?
   mainPdf           String?
-  exams             Exam[]       @relation(fields: [examsIds], references: [id])
-  examsIds          String[]
+  exams             Exam[]
   time              Int
   ExamResult        ExamResult[]
+  ExamPdf           ExamPdf[]
 }
 
 model Exam {
-  id             String          @id @default(uuid()) @map("_id")
-  date           DateTime
-  students       Student[]       @relation(fields: [studentsIds], references: [userId])
-  studentsIds    String[]
-  pdfs           Pdf[]           @relation(fields: [pdfIds], references: [id])
-  pdfIds         String[]
-  pdfMultipliers PdfMultiplier[]
-  results        ExamResult[]
+  id       String       @id @default(uuid())
+  date     DateTime
+  students Student[]
+  pdfs     Pdf[]
+  results  ExamResult[]
+  ExamPdf  ExamPdf[]
 }
 
-type PdfMultiplier {
-  pdfId      String
+model ExamPdf {
+  pdfId  String
+  examId String
   multiplier Float
+  exam   Exam   @relation(fields: [examId], references: [id])
+  pdf    Pdf    @relation(fields: [pdfId], references: [id])
+
+  @@id(fields: [pdfId, examId])
 }
 
 model ExamResult {
-  id        String  @id @default(uuid()) @map("_id")
+  id        String  @id @default(uuid())
   exam      Exam    @relation(fields: [examId], references: [id])
   examId    String
   student   Student @relation(fields: [studentId], references: [userId])
@@ -108,7 +108,7 @@ model ExamResult {
 }
 
 model Login {
-  id        String    @id @default(uuid()) @map("_id")
+  id        String    @id @default(uuid())
   userId    String
   user      User      @relation(fields: [userId], references: [id])
   expiresAt DateTime
