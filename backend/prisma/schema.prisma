@@ -95,7 +95,6 @@ model ExamPdf {
 }
 
 model ExamResult {
-  id        String  @id @default(uuid())
   exam      Exam    @relation(fields: [examId], references: [id])
   examId    String
   student   Student @relation(fields: [studentId], references: [userId])
@@ -104,7 +103,7 @@ model ExamResult {
   pdf       Pdf     @relation(fields: [pdfId], references: [id])
   pdfId     String
 
-  @@unique([examId, studentId, pdfId])
+  @@id([examId, studentId, pdfId])
 }
 
 model Login {
