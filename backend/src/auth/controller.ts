@@ -23,7 +23,11 @@ router.post(
   ),
   wrap(async (req, res) => {
     const user = await getUserOrFail(req.body.phoneNumber);
-    const isPasswordValid = argon2.verify(user.password, req.body.password);
+    const isPasswordValid = await argon2.verify(
+      user.password,
+      req.body.password
+    );
+
     if (!isPasswordValid) {
       throw new BadRequestError("invalid password");
     }
